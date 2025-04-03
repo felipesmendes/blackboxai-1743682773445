@@ -1,10 +1,10 @@
 import { Database } from '@nozbe/watermelondb';
-import LokiJSAdapter from '@nozbe/watermelondb/adapters/lokijs';
+import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import schema from './schema';
 import Ponto from './models/Ponto';
 
-// Initialize LokiJS adapter for web environment
-const adapter = new LokiJSAdapter({
+// Initialize SQLite adapter
+const adapter = new SQLiteAdapter({
   schema,
   // Optional database name
   dbName: 'driverJourneyDB',
@@ -64,5 +64,27 @@ export const DatabaseService = {
       return true;
     }
     return false;
+  },
+
+  // Get all unsynced points
+  async getUnsyncedPontos() {
+    return await database
+      .get('pontos')
+      .query()
+      .where('synced', false)
+      .fetch();
+  },
+
+  // Mark points as synced
+  async markAsSynced(pontos) {
+    await database.write(async () => {
+      await Promise.all(
+        pontos.map(ponto =>
+          ponto.update(p => {
+            p.synced = true;
+          })
+        )
+      );
+    });
   },
 };
