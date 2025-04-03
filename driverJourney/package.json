@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@nozbe/watermelondb": "^0.27.1",
+    "@nozbe/with-observables": "^1.6.0",
     "date-fns": "^4.1.0",
     "expo": "~52.0.42",
     "expo-constants": "~17.0.8",
