@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { Surface } from 'react-native-paper';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import StatusGrid from '../components/StatusGrid';
 import Timer from '../components/Timer';
-import { StorageService } from '../services/storageService';
+import { DatabaseService } from '../database/platformAdapter';
 
 const HomeScreen = () => {
   const [totalTime, setTotalTime] = useState(0);
@@ -19,7 +19,7 @@ const HomeScreen = () => {
 
   const loadJourneyData = async () => {
     try {
-      const history = await StorageService.getPointsHistory();
+      const history = await DatabaseService.getPontosMotorista('161217'); // Mock driver ID
       if (history.length > 0) {
         // Get the earliest point as journey start
         const startTime = new Date(Math.min(...history.map(p => new Date(p.data_hora))));
@@ -54,25 +54,27 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.content}>
-        <Surface style={styles.banner}>
-          <View style={styles.statusIndicator}>
-            <Text style={styles.title}>Jornada em Andamento</Text>
-            <View style={styles.dot} />
-          </View>
-          <View style={styles.timers}>
-            <View style={styles.timerContainer}>
-              <Text style={styles.timerLabel}>Horas trabalhando:</Text>
-              <Timer time={activeTime} />
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.content}>
+          <Surface style={styles.banner}>
+            <View style={styles.statusIndicator}>
+              <Text style={styles.title}>Jornada em Andamento</Text>
+              <View style={styles.dot} />
             </View>
-            <View style={styles.timerContainer}>
-              <Text style={styles.timerLabel}>Horas totais:</Text>
-              <Timer time={totalTime} />
+            <View style={styles.timers}>
+              <View style={styles.timerContainer}>
+                <Text style={styles.timerLabel}>Horas trabalhando:</Text>
+                <Timer time={activeTime} />
+              </View>
+              <View style={styles.timerContainer}>
+                <Text style={styles.timerLabel}>Horas totais:</Text>
+                <Timer time={totalTime} />
+              </View>
             </View>
-          </View>
-        </Surface>
-        <StatusGrid />
-      </View>
+          </Surface>
+          <StatusGrid />
+        </View>
+      </ScrollView>
       <Footer />
     </View>
   );
@@ -83,9 +85,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     padding: 16,
+    paddingBottom: 32, // Add extra padding at bottom for better scrolling
   },
   banner: {
     padding: 16,
