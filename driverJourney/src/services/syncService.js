@@ -1,4 +1,4 @@
-import database from '../database/db';
+import { DatabaseService } from '../database/platformAdapter';
 
 const API_BASE_URL = 'https://api.example.com'; // Replace with actual API URL
 
@@ -6,17 +6,17 @@ export const SyncService = {
   // Sync all pending records to the server
   async syncPendingRecords() {
     try {
-      // Get all records that haven't been synced
-      const pontos = await database
-        .get('pontos')
-        .query()
-        .fetch();
+      // Get all unsynced records
+      const unsyncedPontos = await DatabaseService.getUnsyncedPontos();
 
-      // Filter records that need to be synced (you might want to add a 'synced' field to the schema)
-      const pendingPontos = pontos.filter(ponto => !ponto.synced);
+      if (unsyncedPontos.length === 0) {
+        console.log('No records to sync');
+        return;
+      }
 
       // Prepare the records for sync
-      const recordsToSync = pendingPontos.map(ponto => ({
+      const recordsToSync = unsyncedPontos.map(ponto => ({
+        id: ponto.id,
         motorista_id: ponto.motorista_id,
         veiculo_id: ponto.veiculo_id,
         data_hora: ponto.data_hora.toISOString(),
@@ -24,11 +24,6 @@ export const SyncService = {
         tempo: ponto.tempo,
         tipo: ponto.tipo,
       }));
-
-      if (recordsToSync.length === 0) {
-        console.log('No records to sync');
-        return;
-      }
 
       // Send records to server
       const response = await fetch(`${API_BASE_URL}/sync`, {
@@ -44,15 +39,7 @@ export const SyncService = {
       }
 
       // Mark records as synced
-      await database.write(async () => {
-        await Promise.all(
-          pendingPontos.map(ponto =>
-            ponto.update(p => {
-              p.synced = true;
-            })
-          )
-        );
-      });
+      await DatabaseService.markAsSynced(unsyncedPontos);
 
       console.log('Successfully synced records');
     } catch (error) {
