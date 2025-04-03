@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, Alert } from 'react-native';
 import { Button } from 'react-native-paper';
-import { StorageService } from '../services/storageService';
+import { DatabaseService } from '../database/platformAdapter';
+import { SyncService } from '../services/syncService';
 import { useNavigation } from '@react-navigation/native';
 
 const Footer = () => {
@@ -10,12 +11,15 @@ const Footer = () => {
   const handleEndDay = async () => {
     try {
       // Get active point if exists
-      const activePonto = await StorageService.getPontoAtivo('161217'); // Using mock driver ID
+      const activePonto = await DatabaseService.getPontoAtivo('161217'); // Using mock driver ID
       
       if (activePonto) {
         // Finalize active point
-        await StorageService.finalizarPonto(activePonto.id);
+        await DatabaseService.finalizarPonto(activePonto.id);
       }
+
+      // Force sync to ensure all data is sent to server
+      await SyncService.forceSyncNow();
 
       // Navigate back to login screen
       navigation.navigate('Login');
