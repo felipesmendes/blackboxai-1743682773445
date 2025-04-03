@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const STORAGE_KEYS = {
   POINTS: 'driverJourney_points',
 };
@@ -5,14 +7,23 @@ const STORAGE_KEYS = {
 class WebStorageAdapter {
   constructor() {
     // Initialize storage if needed
-    if (!localStorage.getItem(STORAGE_KEYS.POINTS)) {
-      localStorage.setItem(STORAGE_KEYS.POINTS, JSON.stringify([]));
+    this.initStorage();
+  }
+
+  async initStorage() {
+    try {
+      const points = await AsyncStorage.getItem(STORAGE_KEYS.POINTS);
+      if (!points) {
+        await AsyncStorage.setItem(STORAGE_KEYS.POINTS, JSON.stringify([]));
+      }
+    } catch (error) {
+      console.error('Error initializing storage:', error);
     }
   }
 
   async getPoints() {
     try {
-      const points = localStorage.getItem(STORAGE_KEYS.POINTS);
+      const points = await AsyncStorage.getItem(STORAGE_KEYS.POINTS);
       return points ? JSON.parse(points) : [];
     } catch (error) {
       console.error('Error getting points:', error);
@@ -22,7 +33,7 @@ class WebStorageAdapter {
 
   async savePoints(points) {
     try {
-      localStorage.setItem(STORAGE_KEYS.POINTS, JSON.stringify(points));
+      await AsyncStorage.setItem(STORAGE_KEYS.POINTS, JSON.stringify(points));
     } catch (error) {
       console.error('Error saving points:', error);
     }
