@@ -1,5 +1,5 @@
 import { Model } from '@nozbe/watermelondb';
-import { field, date, readonly } from '@nozbe/watermelondb/decorators';
+import { field, date, readonly, writer } from '@nozbe/watermelondb/decorators';
 
 export default class Ponto extends Model {
   static table = 'pontos';
@@ -22,6 +22,9 @@ export default class Ponto extends Model {
   @field('tipo')
   tipo;
 
+  @field('synced')
+  synced;
+
   @readonly
   @date('created_at')
   createdAt;
@@ -30,12 +33,13 @@ export default class Ponto extends Model {
   @date('updated_at')
   updatedAt;
 
-  // Helper methods
+  @writer
   async finalizarPonto() {
     const now = new Date();
     await this.update(ponto => {
       ponto.data_hora_fim = now;
-      ponto.tempo = Math.floor((now - this.data_hora) / 1000); // tempo em segundos
+      ponto.tempo = Math.floor((now - this.data_hora) / 1000);
+      ponto.synced = false;
     });
   }
 
@@ -47,6 +51,7 @@ export default class Ponto extends Model {
         ponto.data_hora = new Date();
         ponto.tipo = tipo;
         ponto.tempo = 0;
+        ponto.synced = false;
       });
     });
   }
