@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Alert } from 'react-native';
 import StatusCard from './StatusCard';
-import { StorageService } from '../services/storageService';
+import { DatabaseService } from '../database/platformAdapter';
+import { SyncService } from '../services/syncService';
 
 const STATUS_TYPES = [
   { id: 'refeicao', title: 'Refeição', icon: '🍛' },
@@ -41,7 +42,7 @@ const StatusGrid = () => {
 
   const loadActiveStatus = async () => {
     try {
-      const ponto = await StorageService.getPontoAtivo(MOCK_DRIVER_ID);
+      const ponto = await DatabaseService.getPontoAtivo(MOCK_DRIVER_ID);
       if (ponto) {
         setActiveStatus(ponto.tipo);
         setActivePonto(ponto);
@@ -63,18 +64,18 @@ const StatusGrid = () => {
       if (activeStatus === statusId) {
         // Deactivate current status
         if (activePonto) {
-          await StorageService.finalizarPonto(activePonto.id);
+          await DatabaseService.finalizarPonto(activePonto.id);
         }
         setActiveStatus(null);
         setActivePonto(null);
       } else {
         // Finalize current status if exists
         if (activePonto) {
-          await StorageService.finalizarPonto(activePonto.id);
+          await DatabaseService.finalizarPonto(activePonto.id);
         }
 
         // Start new status
-        const newPonto = await StorageService.createPonto(
+        const newPonto = await DatabaseService.createPonto(
           MOCK_DRIVER_ID,
           MOCK_VEHICLE_ID,
           statusId
@@ -86,6 +87,9 @@ const StatusGrid = () => {
           [statusId]: 0
         }));
       }
+
+      // Trigger sync after status change
+      SyncService.forceSyncNow();
     } catch (error) {
       console.error('Error handling status change:', error);
       Alert.alert('Erro', 'Não foi possível alterar o status.');
