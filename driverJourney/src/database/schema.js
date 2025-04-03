@@ -14,6 +14,7 @@ export default appSchema({
         { name: 'tipo', type: 'string' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
+        { name: 'synced', type: 'boolean' },
       ],
     }),
   ],
